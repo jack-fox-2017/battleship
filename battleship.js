@@ -48,13 +48,24 @@ class Board {
         })
 
         arr.push(falseCond.length > 0 ? chalk.red('X') : '')
-
       }
 
       table.push(arr)
     }
 
     return table.toString()
+  }
+
+  static arrBoard(size) {
+    let result = []
+
+    for (let i = 0; i < size; i++) {
+      result.push([])
+      for (let j = 0; j < size; j++)
+        result[i].push(0)
+    }
+
+    return result
   }
 }
 
@@ -63,7 +74,9 @@ class Game {
     this.board = new Board(size)
     this.ships = []
 
+    this.grid = Board.arrBoard(10)
     this.filled = []
+    this.guessed = []
   }
 
   addShip(name, size) {
@@ -90,7 +103,7 @@ class Game {
 
           let obj = {
             pos: strPos,
-            cond: false
+            cond: true
           }
           this.ships[ship].ship.push(obj)
 
@@ -98,7 +111,6 @@ class Game {
           if (this.ships[ship].orientation) randJ++
           //portrait
           else randI++
-
         } else {
           this.ships[ship].ship = []
 
@@ -115,18 +127,40 @@ class Game {
       }
     }
 
+    this.ships.forEach(ship => {
+      ship.ship.forEach(tile => {
+        let ij = this.posToIJ(tile.pos)
+        this.grid[ij[0]][ij[1]] = 1
+      })
+    })
+
+  }
+
+  ijToPos(i, j) {
+
+  }
+
+  posToIJ(str) {
+    if (str.length == 2) {
+      let split = str.split('')
+
+      let i = Number(split[1]) - 1
+      let j = split[0].charCodeAt(0) - 65
+
+      return [i, j]
+    }
+
+    else return false
   }
 
   play() {
     this.arrangeShips()
 
-    // for (let i = 0; i < 5; i++)
-    // console.log(this.ships[i]);
-
     console.log(this.board.print(this.ships));
+    // console.log(this.grid);
   }
 
-  turn() {
+  guess(pos) {
 
   }
 

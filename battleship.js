@@ -3,8 +3,8 @@ const Table = require('cli-table')
 const chalk = require('chalk')
 const readline = require('readline')
 const rl = readline.createInterface({
-  input: process.stdin,
-  output: process.stdout
+    input: process.stdin,
+    output: process.stdout
 });
 
 class Ship {
@@ -76,7 +76,8 @@ class Board {
 
 class Game {
     constructor(size) {
-        this.board = new Board(size)
+        this.size = size
+        this.board = new Board(this.size)
         this.ships = []
 
         this.grid = Board.arrBoard(10)
@@ -140,56 +141,89 @@ class Game {
 
     }
 
-    ijToPos(i, j) {
+    play() {
+        this.arrangeShips()
+        console.log('\u001b[2J\u001b[0;0H');
+        console.log(this.board.print(this.ships, this.grid));
 
+        this.turn()
     }
 
     posToIJ(str) {
-        if (str.length == 2) {
-            let split = str.split('')
+      if (str.length <= 0)
+        return false
 
-            let i = Number(split[1]) - 1
-            let j = split[0].charCodeAt(0) - 65
+      let split = str.split('')
+      let i
+      let j = split[0].charCodeAt(0) - 65
 
-            return [i, j]
-        } else
-            return false
-    }
+      if (str.length == 2)
+        i = Number(split[1]) - 1
+      else if (str.length == 3)
+        i = Number(split[1] + '' + split[2]) - 1
+      else
+        return false
 
-    play() {
-        this.arrangeShips()
-        console.log(JSON.stringify(this.ships, null, 2))
-        console.log(this.board.print(this.ships, this.grid));
+      if (isNaN(i) || i >= this.size || j >= this.size || i < 0 || j < 0)
+        return false
 
-        // console.log(this.grid);
-        this.turn()
+      console.log([i, j]);
+      return [i, j]
     }
 
     guess(pos) {
         let ij = this.posToIJ(pos)
-        if (this.grid[ij[0]][ij[1]].haveShip) {
-          this.ships.forEach(ship => {
-            ship.ship.forEach(block => {
-              if (block.pos == pos) {
-                block.cond = false
-              }
-            })
-          })
+        if (ij != false) {
+            if (this.grid[ij[0]][ij[1]].haveShip) {
+                this.ships.forEach(ship => {
+                    ship.ship.forEach(block => {
+                        if (block.pos == pos) {
+                            block.cond = false
+                        }
+                    })
+                })
+            } else {
+                this.grid[ij[0]][ij[1]].condition = false
+            }
         } else {
-          this.grid[ij[0]][ij[1]].condition = false
-        }g6G6
+            return false
+        }
+    }
 
+    checkWin() {
+      for(let i = 0; i < this.ships.length; i++)
+        for(let j = 0; j < this.ships[i].ship.length; j++)
+          if (this.ships[i].ship[j].cond == true)
+            return false
+      return true
     }
 
     turn() {
-      rl.question('Guess position: ', input => {
-        this.guess(input)
-        console.log(this.board.print(this.ships, this.grid));
+        rl.question('Guess position: ', input => {
+            input = input.toUpperCase()
+            if (this.guessed.indexOf(input) < 0) {
+              let guess = this.guess(input)
+              if (guess != false) {
+                this.guessed.push(input)
+                console.log('\u001b[2J\u001b[0;0H');
+                // console.log(JSON.stringify(this.ships, null, 2));
+                console.log(this.board.print(this.ships, this.grid));
+              }
+              else
+                console.log('Input Invalid');
 
-        this.turn()
-      })
+              if(this.checkWin()) {
+                console.log('YOU WIN!!')
+                rl.close()
+              } else
+                this.turn()
+
+            } else {
+              console.log('Position already guessed');
+              this.turn()
+            }
+        })
     }
-
 }
 
 let game = new Game(10)
